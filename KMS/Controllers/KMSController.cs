@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using KMS.Contracts;
 using KMS.Factory;
+using KMS.CryptographyProviders;
 
 namespace KMS.Controllers
 {
@@ -10,19 +11,34 @@ namespace KMS.Controllers
     public class CryptographyController : ControllerBase
     {
         private readonly CryptographyProviderFactory _factory;
+        private readonly KeyStoreManager _keyStoreManager;
 
-        public CryptographyController(CryptographyProviderFactory factory)
+        public CryptographyController(CryptographyProviderFactory factory, KeyStoreManager keyStoreManager)
         {
             _factory = factory;
+            _keyStoreManager = keyStoreManager;
+        }
+
+        [HttpGet("list")]
+        public IActionResult GetAllKeys()
+        {
+            var keys = _keyStoreManager.GetAllKeys();
+            return Ok(keys);
+        }
+
+        public class CreateKeyRequest
+        {
+            public string Algorithm { get; set; }
+            public int KeySize { get; set; }
         }
 
         [HttpPost("create")]
-        public IActionResult CreateKey(string algorithm, int keySize)
+        public IActionResult CreateKey([FromBody] CreateKeyRequest request)
         {
             try
             {
-                var provider = _factory.GetCryptographyProvider(algorithm);
-                var keyId = provider.CreateKey(algorithm, keySize);
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                var keyId = provider.CreateKey(request.Algorithm, request.KeySize);
                 return Ok(keyId);
             }
             catch (Exception ex)
@@ -31,13 +47,20 @@ namespace KMS.Controllers
             }
         }
 
+        public class EncryptRequest
+        {
+            public string Algorithm { get; set; }
+            public string KeyId { get; set; }
+            public byte[] Data { get; set; }
+        }
+
         [HttpPost("encrypt")]
-        public IActionResult Encrypt(string algorithm, string keyId, [FromBody] byte[] data)
+        public IActionResult Encrypt([FromBody] EncryptRequest request)
         {
             try
             {
-                var provider = _factory.GetCryptographyProvider(algorithm);
-                var encryptedData = provider.Encrypt(data, keyId);
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                var encryptedData = provider.Encrypt(request.Data, request.KeyId);
                 return Ok(encryptedData);
             }
             catch (Exception ex)
@@ -46,13 +69,20 @@ namespace KMS.Controllers
             }
         }
 
+        public class DecryptRequest
+        {
+            public string Algorithm { get; set; }
+            public string KeyId { get; set; }
+            public byte[] Data { get; set; }
+        }
+
         [HttpPost("decrypt")]
-        public IActionResult Decrypt(string algorithm, string keyId, [FromBody] byte[] data)
+        public IActionResult Decrypt([FromBody] DecryptRequest request)
         {
             try
             {
-                var provider = _factory.GetCryptographyProvider(algorithm);
-                var decryptedData = provider.Decrypt(data, keyId);
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                var decryptedData = provider.Decrypt(request.Data, request.KeyId);
                 return Ok(decryptedData);
             }
             catch (Exception ex)
@@ -61,14 +91,20 @@ namespace KMS.Controllers
             }
         }
 
+        public class KeyActionRequest
+        {
+            public string Algorithm { get; set; }
+            public string KeyId { get; set; }
+        }
+
         [HttpPost("activate")]
-        public IActionResult ActivateKey(string algorithm, string keyId)
+        public IActionResult ActivateKey([FromBody] KeyActionRequest request)
         {
             try
             {
-                var provider = _factory.GetCryptographyProvider(algorithm);
-                provider.ActivateKey(keyId);
-                return Ok($"Key {keyId} activated.");
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                provider.ActivateKey(request.KeyId);
+                return Ok($"Key {request.KeyId} activated.");
             }
             catch (Exception ex)
             {
@@ -77,13 +113,13 @@ namespace KMS.Controllers
         }
 
         [HttpPost("deactivate")]
-        public IActionResult DeactivateKey(string algorithm, string keyId)
+        public IActionResult DeactivateKey([FromBody] KeyActionRequest request)
         {
             try
             {
-                var provider = _factory.GetCryptographyProvider(algorithm);
-                provider.DeactivateKey(keyId);
-                return Ok($"Key {keyId} deactivated.");
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                provider.DeactivateKey(request.KeyId);
+                return Ok($"Key {request.KeyId} deactivated.");
             }
             catch (Exception ex)
             {
@@ -92,13 +128,13 @@ namespace KMS.Controllers
         }
 
         [HttpPost("destroy")]
-        public IActionResult DestroyKey(string algorithm, string keyId)
+        public IActionResult DestroyKey([FromBody] KeyActionRequest request)
         {
             try
             {
-                var provider = _factory.GetCryptographyProvider(algorithm);
-                provider.DestroyKey(keyId);
-                return Ok($"Key {keyId} destroyed.");
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                provider.DestroyKey(request.KeyId);
+                return Ok($"Key {request.KeyId} destroyed.");
             }
             catch (Exception ex)
             {
@@ -107,13 +143,13 @@ namespace KMS.Controllers
         }
 
         [HttpPost("revoke")]
-        public IActionResult RevokeKey(string algorithm, string keyId)
+        public IActionResult RevokeKey([FromBody] KeyActionRequest request)
         {
             try
             {
-                var provider = _factory.GetCryptographyProvider(algorithm);
-                provider.RevokeKey(keyId);
-                return Ok($"Key {keyId} revoked.");
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                provider.RevokeKey(request.KeyId);
+                return Ok($"Key {request.KeyId} revoked.");
             }
             catch (Exception ex)
             {
@@ -122,13 +158,13 @@ namespace KMS.Controllers
         }
 
         [HttpPost("archive")]
-        public IActionResult ArchiveKey(string algorithm, string keyId)
+        public IActionResult ArchiveKey([FromBody] KeyActionRequest request)
         {
             try
             {
-                var provider = _factory.GetCryptographyProvider(algorithm);
-                provider.ArchiveKey(keyId);
-                return Ok($"Key {keyId} archived.");
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                provider.ArchiveKey(request.KeyId);
+                return Ok($"Key {request.KeyId} archived.");
             }
             catch (Exception ex)
             {
@@ -137,13 +173,13 @@ namespace KMS.Controllers
         }
 
         [HttpPost("recover")]
-        public IActionResult RecoverKey(string algorithm, string keyId)
+        public IActionResult RecoverKey([FromBody] KeyActionRequest request)
         {
             try
             {
-                var provider = _factory.GetCryptographyProvider(algorithm);
-                provider.RecoverKey(keyId);
-                return Ok($"Key {keyId} recovered.");
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                provider.RecoverKey(request.KeyId);
+                return Ok($"Key {request.KeyId} recovered.");
             }
             catch (Exception ex)
             {
@@ -165,6 +201,5 @@ namespace KMS.Controllers
                 return BadRequest(ex.Message);
             }
         }
-
     }
 }

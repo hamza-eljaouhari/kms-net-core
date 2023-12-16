@@ -36,8 +36,5 @@ namespace KMS.Contracts
 
         // Logs and audits key usage
         void LogKeyUsage(string keyId, string operation);
-
-        // Manages access controls for the keys
-        void SetAccessControl(string keyId, string accessPolicy);
     }
 }

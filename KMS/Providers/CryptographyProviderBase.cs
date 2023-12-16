@@ -1,96 +1,73 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using KMS.Contracts;
+using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using KMS.Contracts;
 
 namespace KMS.CryptographyProviders
 {
     public abstract class ProviderBase : IKeyLifeCycleManager
     {
-        protected Dictionary<string, byte[]> KeyStore = new Dictionary<string, byte[]>();
-        protected Dictionary<string, string> KeyStatus = new Dictionary<string, string>();
-        private const string LogFilePath = "key_usage_log.txt"; // File path for logging
+        protected KeyStoreManager keyStoreManager;
 
+        // Example implementation of CreateKey, Encrypt, and Decrypt
         public abstract string CreateKey(string keyType, int keySize);
         public abstract byte[] Encrypt(byte[] data, string keyId);
         public abstract byte[] Decrypt(byte[] data, string keyId);
 
+        protected ProviderBase(KeyStoreManager keyStoreManager)
+        {
+            this.keyStoreManager = keyStoreManager;
+        }
+
+
         public void ActivateKey(string keyId)
         {
-            ValidateKeyExists(keyId);
-            KeyStatus[keyId] = "Active";
+            keyStoreManager.ActivateKey(keyId);
         }
 
         public void DeactivateKey(string keyId)
         {
-            ValidateKeyExists(keyId);
-            KeyStatus[keyId] = "Inactive";
+            keyStoreManager.DeactivateKey(keyId);
         }
 
         public void DestroyKey(string keyId)
         {
-            ValidateKeyExists(keyId);
-            KeyStore.Remove(keyId);
-            KeyStatus.Remove(keyId);
+            keyStoreManager.DestroyKey(keyId);
         }
 
         public void RevokeKey(string keyId)
         {
-            ValidateKeyExists(keyId);
-            KeyStatus[keyId] = "Revoked";
+            keyStoreManager.RevokeKey(keyId);
         }
 
         public void ArchiveKey(string keyId)
         {
-            ValidateKeyExists(keyId);
-            KeyStatus[keyId] = "Archived";
+            keyStoreManager.ArchiveKey(keyId);
         }
 
         public void RecoverKey(string keyId)
         {
-            ValidateKeyExists(keyId);
-            if (KeyStatus[keyId] != "Archived")
-            {
-                throw new InvalidOperationException("Only archived keys can be recovered.");
-            }
-            KeyStatus[keyId] = "Active";
+            keyStoreManager.RecoverKey(keyId);
         }
 
         public byte[] GetKeyInfo(string keyId)
         {
             ValidateKeyExists(keyId);
 
-            // Example: Returning key information (replace with your actual key information structure)
-            if (KeyStatus.TryGetValue(keyId, out var keyInfo))
-            {
-                return Encoding.UTF8.GetBytes(keyInfo);
-            }
-
-            throw new InvalidOperationException("Unable to retrieve key information.");
+            var keyInfo = keyStoreManager.GetKeyInfo(keyId);
+            var infoString = $"KeyID: {keyInfo.KeyId}, Status: {keyInfo.Status}, Algorithm: {keyInfo.AlgorithmType}";
+            return Encoding.UTF8.GetBytes(infoString);
         }
 
         public void LogKeyUsage(string keyId, string operation)
         {
-            // Log the operation (Append to a file or a logging system)
-            File.AppendAllText(LogFilePath, $"{DateTime.Now}: KeyID {keyId} used for {operation}\n");
-        }
-
-        public void SetAccessControl(string keyId, string accessPolicy)
-        {
-            ValidateKeyExists(keyId);
-
-            // Example: Setting access control (this is a placeholder, replace with actual access control logic)
-            KeyStatus[keyId] = accessPolicy;
+            keyStoreManager.LogKeyUsage(keyId, operation);
         }
 
         protected void ValidateKeyExists(string keyId)
         {
-            if (!KeyStore.ContainsKey(keyId))
-            {
-                throw new KeyNotFoundException($"Key with ID {keyId} does not exist.");
-            }
+            keyStoreManager.ValidateKeyExists(keyId);
         }
-
     }
 }

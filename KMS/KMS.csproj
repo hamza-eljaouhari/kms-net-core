@@ -24,6 +24,7 @@
     <None Remove="Controllers\" />
     <None Remove="Factory\" />
     <None Remove="Tests\" />
+    <None Remove="Models\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Contracts\" />
@@ -32,5 +33,6 @@
     <Folder Include="Controllers\" />
     <Folder Include="Factory\" />
     <Folder Include="Tests\" />
+    <Folder Include="Models\" />
   </ItemGroup>
 </Project>

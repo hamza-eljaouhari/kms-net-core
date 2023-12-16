@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using KMS.Contracts;
@@ -8,6 +7,11 @@ namespace KMS.CryptographyProviders
 {
     public class AESProvider : ProviderBase
     {
+        public AESProvider(KeyStoreManager keyStoreManager)
+            : base(keyStoreManager)
+        {
+        }
+
         public override string CreateKey(string keyType, int keySize)
         {
             if (keyType != "AES")
@@ -18,20 +22,17 @@ namespace KMS.CryptographyProviders
                 aes.KeySize = keySize;
                 aes.GenerateKey();
                 string keyId = Guid.NewGuid().ToString();
-                KeyStore[keyId] = aes.Key;
-                KeyStatus[keyId] = "Created";
+                keyStoreManager.AddKey(keyId, aes.Key, "AES");
                 return keyId;
             }
         }
 
         public override byte[] Encrypt(byte[] data, string keyId)
         {
-            if (!KeyStore.TryGetValue(keyId, out var key))
-                throw new KeyNotFoundException($"Key with ID {keyId} does not exist.");
-
+            var keyInfo = keyStoreManager.GetKeyInfo(keyId);
             using (var aes = Aes.Create())
             {
-                aes.Key = key;
+                aes.Key = keyInfo.KeyData;
                 aes.GenerateIV();
                 var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
                 using (var ms = new MemoryStream())
@@ -48,12 +49,10 @@ namespace KMS.CryptographyProviders
 
         public override byte[] Decrypt(byte[] data, string keyId)
         {
-            if (!KeyStore.TryGetValue(keyId, out var key))
-                throw new KeyNotFoundException($"Key with ID {keyId} does not exist.");
-
+            var keyInfo = keyStoreManager.GetKeyInfo(keyId);
             using (var aes = Aes.Create())
             {
-                aes.Key = key;
+                aes.Key = keyInfo.KeyData;
                 byte[] iv = new byte[aes.BlockSize / 8];
                 Array.Copy(data, iv, iv.Length);
                 aes.IV = iv;
@@ -70,7 +69,4 @@ namespace KMS.CryptographyProviders
             }
         }
     }
-
 }
-
-

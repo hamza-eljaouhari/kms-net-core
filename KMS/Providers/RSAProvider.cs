@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using KMS.Contracts;
@@ -8,6 +7,11 @@ namespace KMS.CryptographyProviders
 {
     public class RSAProvider : ProviderBase
     {
+        public RSAProvider(KeyStoreManager keyStoreManager)
+            : base(keyStoreManager)
+        {
+        }
+
         public override string CreateKey(string keyType, int keySize)
         {
             if (keyType != "RSA")
@@ -17,35 +21,33 @@ namespace KMS.CryptographyProviders
             {
                 string keyId = Guid.NewGuid().ToString();
                 RSAParameters parameters = rsa.ExportParameters(true);
-                KeyStore[keyId] = SerializeRsaParameters(parameters);
-                KeyStatus[keyId] = "Created";
+                byte[] serializedParameters = SerializeRsaParameters(parameters);
+                keyStoreManager.AddKey(keyId, serializedParameters, "RSA");
                 return keyId;
             }
         }
 
         public override byte[] Encrypt(byte[] data, string keyId)
         {
-            if (!KeyStore.TryGetValue(keyId, out var keyParameters))
-                throw new KeyNotFoundException($"Key with ID {keyId} does not exist.");
-
+            var keyInfo = keyStoreManager.GetKeyInfo(keyId);
             using (var rsa = RSA.Create())
             {
-                rsa.ImportParameters(DeserializeRsaParameters(keyParameters));
+                rsa.ImportParameters(DeserializeRsaParameters(keyInfo.KeyData));
                 return rsa.Encrypt(data, RSAEncryptionPadding.OaepSHA256);
             }
         }
 
         public override byte[] Decrypt(byte[] data, string keyId)
         {
-            if (!KeyStore.TryGetValue(keyId, out var keyParameters))
-                throw new KeyNotFoundException($"Key with ID {keyId} does not exist.");
-
+            var keyInfo = keyStoreManager.GetKeyInfo(keyId);
             using (var rsa = RSA.Create())
             {
-                rsa.ImportParameters(DeserializeRsaParameters(keyParameters));
+                rsa.ImportParameters(DeserializeRsaParameters(keyInfo.KeyData));
                 return rsa.Decrypt(data, RSAEncryptionPadding.OaepSHA256);
             }
         }
+
+
         private byte[] SerializeRsaParameters(RSAParameters parameters)
         {
             using (var ms = new MemoryStream())
