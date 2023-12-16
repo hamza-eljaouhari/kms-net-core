@@ -12,14 +12,13 @@ namespace KMS.CryptographyProviders
 
         // Example implementation of CreateKey, Encrypt, and Decrypt
         public abstract string CreateKey(string keyType, int keySize);
-        public abstract byte[] Encrypt(byte[] data, string keyId);
-        public abstract byte[] Decrypt(byte[] data, string keyId);
+        public abstract string Encrypt(string text, string keyId);
+        public abstract string Decrypt(string encryptedText, string keyId);
 
         protected ProviderBase(KeyStoreManager keyStoreManager)
         {
             this.keyStoreManager = keyStoreManager;
         }
-
 
         public void ActivateKey(string keyId)
         {

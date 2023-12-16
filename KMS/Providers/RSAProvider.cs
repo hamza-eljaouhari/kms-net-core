@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using KMS.Contracts;
 
 namespace KMS.CryptographyProviders
@@ -27,26 +28,39 @@ namespace KMS.CryptographyProviders
             }
         }
 
-        public override byte[] Encrypt(byte[] data, string keyId)
+        public override string Encrypt(string text, string keyId)
         {
             var keyInfo = keyStoreManager.GetKeyInfo(keyId);
             using (var rsa = RSA.Create())
             {
                 rsa.ImportParameters(DeserializeRsaParameters(keyInfo.KeyData));
-                return rsa.Encrypt(data, RSAEncryptionPadding.OaepSHA256);
+
+                // Convert text to UTF-8 bytes before encryption
+                byte[] dataBytes = Encoding.UTF8.GetBytes(text);
+
+                byte[] encryptedBytes = rsa.Encrypt(dataBytes, RSAEncryptionPadding.OaepSHA256);
+
+                return Convert.ToBase64String(encryptedBytes);
             }
         }
 
-        public override byte[] Decrypt(byte[] data, string keyId)
+        public override string Decrypt(string encryptedText, string keyId)
         {
             var keyInfo = keyStoreManager.GetKeyInfo(keyId);
             using (var rsa = RSA.Create())
             {
                 rsa.ImportParameters(DeserializeRsaParameters(keyInfo.KeyData));
-                return rsa.Decrypt(data, RSAEncryptionPadding.OaepSHA256);
+
+                byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
+
+                byte[] decryptedBytes = rsa.Decrypt(encryptedBytes, RSAEncryptionPadding.OaepSHA256);
+
+                // Convert decrypted bytes back to text
+                string decryptedText = Encoding.UTF8.GetString(decryptedBytes);
+
+                return decryptedText;
             }
         }
-
 
         private byte[] SerializeRsaParameters(RSAParameters parameters)
         {
@@ -107,6 +121,5 @@ namespace KMS.CryptographyProviders
             int length = reader.ReadInt32();
             return length > 0 ? reader.ReadBytes(length) : null;
         }
-
     }
 }

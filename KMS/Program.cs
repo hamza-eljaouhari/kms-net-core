@@ -4,7 +4,6 @@ using KMS.Factory;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 // Register CryptographyProviderFactory as a singleton
 builder.Services.AddSingleton<CryptographyProviderFactory>();
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using KMS.Contracts;
 
 namespace KMS.CryptographyProviders
@@ -27,7 +28,7 @@ namespace KMS.CryptographyProviders
             }
         }
 
-        public override byte[] Encrypt(byte[] data, string keyId)
+        public override string Encrypt(string text, string keyId)
         {
             var keyInfo = keyStoreManager.GetKeyInfo(keyId);
             using (var aes = Aes.Create())
@@ -40,21 +41,23 @@ namespace KMS.CryptographyProviders
                     ms.Write(aes.IV, 0, aes.IV.Length); // Prepend the IV
                     using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
                     {
-                        cs.Write(data, 0, data.Length);
+                        byte[] dataBytes = Encoding.UTF8.GetBytes(text);
+                        cs.Write(dataBytes, 0, dataBytes.Length);
                     }
-                    return ms.ToArray();
+                    return Convert.ToBase64String(ms.ToArray());
                 }
             }
         }
 
-        public override byte[] Decrypt(byte[] data, string keyId)
+        public override string Decrypt(string encryptedText, string keyId)
         {
             var keyInfo = keyStoreManager.GetKeyInfo(keyId);
             using (var aes = Aes.Create())
             {
                 aes.Key = keyInfo.KeyData;
                 byte[] iv = new byte[aes.BlockSize / 8];
-                Array.Copy(data, iv, iv.Length);
+                byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
+                Array.Copy(encryptedBytes, iv, iv.Length);
                 aes.IV = iv;
 
                 var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
@@ -62,9 +65,10 @@ namespace KMS.CryptographyProviders
                 {
                     using (var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Write))
                     {
-                        cs.Write(data, iv.Length, data.Length - iv.Length);
+                        cs.Write(encryptedBytes, iv.Length, encryptedBytes.Length - iv.Length);
                     }
-                    return ms.ToArray();
+                    byte[] decryptedBytes = ms.ToArray();
+                    return Encoding.UTF8.GetString(decryptedBytes);
                 }
             }
         }

@@ -8,10 +8,10 @@ namespace KMS.Contracts
         string CreateKey(string keyType, int keySize);
 
         // Encrypts data using a specified key
-        byte[] Encrypt(byte[] data, string keyId);
+        string Encrypt(string text, string keyId);
 
         // Decrypts data using a specified key
-        byte[] Decrypt(byte[] data, string keyId);
+        string Decrypt(string encryptedText, string keyId);
 
         // Retrieves information about a cryptographic key
         byte[] GetKeyInfo(string keyId);
