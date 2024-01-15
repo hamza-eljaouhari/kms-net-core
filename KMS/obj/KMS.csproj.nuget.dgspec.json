@@ -1,25 +1,27 @@
 {
   "format": 1,
   "restore": {
-    "/Users/eljaouharihamza/Projects/KMS/KMS/KMS.csproj": {}
+    "C:\\Users\\pc\\Documents\\kms-net-core\\KMS\\KMS.csproj": {}
   },
   "projects": {
-    "/Users/eljaouharihamza/Projects/KMS/KMS/KMS.csproj": {
+    "C:\\Users\\pc\\Documents\\kms-net-core\\KMS\\KMS.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/eljaouharihamza/Projects/KMS/KMS/KMS.csproj",
+        "projectUniqueName": "C:\\Users\\pc\\Documents\\kms-net-core\\KMS\\KMS.csproj",
         "projectName": "KMS",
-        "projectPath": "/Users/eljaouharihamza/Projects/KMS/KMS/KMS.csproj",
-        "packagesPath": "/Users/eljaouharihamza/.nuget/packages/",
-        "outputPath": "/Users/eljaouharihamza/Projects/KMS/KMS/obj/",
+        "projectPath": "C:\\Users\\pc\\Documents\\kms-net-core\\KMS\\KMS.csproj",
+        "packagesPath": "C:\\Users\\pc\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\pc\\Documents\\kms-net-core\\KMS\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/eljaouharihamza/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\pc\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net6.0"
         ],
         "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -38,6 +40,10 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
+            "Microsoft.AspNetCore": {
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
               "version": "[17.8.0, )"
@@ -48,7 +54,19 @@
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
-              "version": "[6.5.0, )"
+              "version": "[5.0.0-rc2, )"
+            },
+            "Swashbuckle.AspNetCore.SwaggerUI": {
+              "target": "Package",
+              "version": "[5.0.0-rc2, )"
+            },
+            "System.Net.Http": {
+              "target": "Package",
+              "version": "[4.3.4, )"
+            },
+            "System.Net.Http.Json": {
+              "target": "Package",
+              "version": "[8.0.0, )"
             },
             "xunit": {
               "target": "Package",
@@ -72,6 +90,24 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[6.0.26, 6.0.26]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.win-x64",
+              "version": "[6.0.26, 6.0.26]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[6.0.26, 6.0.26]"
+            },
+            {
+              "name": "Microsoft.WindowsDesktop.App.Ref",
+              "version": "[6.0.26, 6.0.26]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.AspNetCore.App": {
               "privateAssets": "none"
@@ -80,7 +116,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/x64/sdk/6.0.413/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.101\\RuntimeIdentifierGraph.json"
         }
       }
     }

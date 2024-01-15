@@ -1,45 +1,204 @@
-﻿using System;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
-using Newtonsoft.Json;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.AspNetCore.Hosting;
-using KMS; // Replace with the actual namespace of your Startup class
+﻿using Microsoft.AspNetCore.Mvc;
+using KMS.Contracts;
+using KMS.Factory;
+using KMS.CryptographyProviders;
 
-public class CryptographyControllerTests
+namespace KMS.Controllers
 {
-    private readonly TestServer _server;
-    private readonly HttpClient _client;
-
-    public CryptographyControllerTests()
+    [ApiController]
+    [Route("api/[controller]")]
+    public class CryptographyController : ControllerBase
     {
-        // Set up the test server
-        _server = new TestServer(new WebHostBuilder().UseStartup<Startup>()); // Use your Startup class
-        _client = _server.CreateClient();
-    }
+        private readonly CryptographyProviderFactory _factory;
+        private readonly KeyStoreManager _keyStoreManager;
 
-    private StringContent GetStringContent(object obj)
-        => new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8, "application/json");
+        public CryptographyController(CryptographyProviderFactory factory, KeyStoreManager keyStoreManager)
+        {
+            _factory = factory;
+            _keyStoreManager = keyStoreManager;
+        }
 
-    [Theory]
-    [InlineData("AES", 256)]
-    [InlineData("RSA", 2048)]
-    public async Task CreateKey_ReturnsKeyId(string algorithm, int keySize)
-    {
-        var response = await _client.PostAsync("/api/cryptography/create",
-            GetStringContent(new { Algorithm = algorithm, KeySize = keySize }));
+        [HttpGet("list")]
+        public IActionResult GetAllKeys()
+        {
+            var keys = _keyStoreManager.GetAllKeys();
+            return Ok(keys);
+        }
 
-        response.EnsureSuccessStatusCode();
-        var keyId = await response.Content.ReadAsStringAsync();
-        Assert.NotNull(keyId);
-    }
+        public class CreateKeyRequest
+        {
+            public string Algorithm { get; set; }
+            public int KeySize { get; set; }
+        }
 
-    // Dispose the TestServer and HttpClient
-    public void Dispose()
-    {
-        _client.Dispose();
-        _server.Dispose();
+        [HttpPost("create")]
+        public IActionResult CreateKey([FromBody] CreateKeyRequest request)
+        {
+            try
+            {
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                var keyId = provider.CreateKey(request.Algorithm, request.KeySize);
+                return Ok(keyId);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        public class EncryptRequest
+        {
+            public string Algorithm { get; set; }
+            public string KeyId { get; set; }
+            public string Data { get; set; } // Change Data property to string
+        }
+
+        [HttpPost("encrypt")]
+        public IActionResult Encrypt([FromBody] EncryptRequest request)
+        {
+            try
+            {
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                var encryptedData = provider.Encrypt(request.Data, request.KeyId);
+                return Ok(encryptedData);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        public class DecryptRequest
+        {
+            public string Algorithm { get; set; }
+            public string KeyId { get; set; }
+            public string Data { get; set; } // Change Data property to string
+        }
+
+        [HttpPost("decrypt")]
+        public IActionResult Decrypt([FromBody] DecryptRequest request)
+        {
+            try
+            {
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                var decryptedData = provider.Decrypt(request.Data, request.KeyId);
+                return Ok(decryptedData);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        public class KeyActionRequest
+        {
+            public string Algorithm { get; set; }
+            public string KeyId { get; set; }
+        }
+
+        [HttpPost("activate")]
+        public IActionResult ActivateKey([FromBody] KeyActionRequest request)
+        {
+            try
+            {
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                provider.ActivateKey(request.KeyId);
+                return Ok($"Key {request.KeyId} activated.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("deactivate")]
+        public IActionResult DeactivateKey([FromBody] KeyActionRequest request)
+        {
+            try
+            {
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                provider.DeactivateKey(request.KeyId);
+                return Ok($"Key {request.KeyId} deactivated.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("destroy")]
+        public IActionResult DestroyKey([FromBody] KeyActionRequest request)
+        {
+            try
+            {
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                provider.DestroyKey(request.KeyId);
+                return Ok($"Key {request.KeyId} destroyed.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("revoke")]
+        public IActionResult RevokeKey([FromBody] KeyActionRequest request)
+        {
+            try
+            {
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                provider.RevokeKey(request.KeyId);
+                return Ok($"Key {request.KeyId} revoked.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("archive")]
+        public IActionResult ArchiveKey([FromBody] KeyActionRequest request)
+        {
+            try
+            {
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                provider.ArchiveKey(request.KeyId);
+                return Ok($"Key {request.KeyId} archived.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("recover")]
+        public IActionResult RecoverKey([FromBody] KeyActionRequest request)
+        {
+            try
+            {
+                var provider = _factory.GetCryptographyProvider(request.Algorithm);
+                provider.RecoverKey(request.KeyId);
+                return Ok($"Key {request.KeyId} recovered.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("info")]
+        public IActionResult GetKeyInfo(string algorithm, string keyId)
+        {
+            try
+            {
+                var provider = _factory.GetCryptographyProvider(algorithm);
+                var keyInfo = provider.GetKeyInfo(keyId);
+                return Ok(keyInfo);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

@@ -7,45 +7,51 @@ var builder = WebApplication.CreateBuilder(args);
 // Register CryptographyProviderFactory as a singleton
 builder.Services.AddSingleton<CryptographyProviderFactory>();
 
+// Register KeyStoreManager as a singleton
 builder.Services.AddSingleton<KeyStoreManager>();
 
 // Register providers as Transient or Scoped based on your needs
 builder.Services.AddTransient<AESProvider>();
 builder.Services.AddTransient<RSAProvider>();
 
-builder.Services.AddCors(options => {
-    options.AddPolicy(name: "AllowMyReactApp",
-                      builder =>
-                      {
-                          builder.WithOrigins("http://localhost:3000") // Your React app's URL
-                                 .AllowAnyHeader()
-                                 .AllowAnyMethod();
-                      });
-                });
+// Setup CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "AllowMyReactApp", builderCors =>
+    {
+        builderCors.WithOrigins("http://localhost:3000") // Your React app's URL
+                   .AllowAnyHeader()
+                   .AllowAnyMethod();
+    });
+});
 
+// Register controllers
 builder.Services.AddControllers();
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// Add Swagger/OpenAPI support
+//builder.Services.AddEndpointsApiExplorer();
+//builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//// Configure the HTTP request pipeline.
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI();
+//}
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+// Add UseRouting middleware
+app.UseRouting();
 
-app.MapControllers();
-
+// Apply CORS policy
 app.UseCors("AllowMyReactApp");
 
-app.Run();
+// Add UseAuthorization middleware
+app.UseAuthorization();
 
+// Map controllers
+app.MapControllers();
 
